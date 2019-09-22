@@ -2,7 +2,7 @@
     "name": "minesweeper",
     "version": "0.1.0",
     "description": "Minesweeper app built with Electron and React",
-    "main": "src/electron-starter.js",
+    "main": "electron-starter.js",
     "homepage": "./",
     "license": "CC0",
     "scripts": {
