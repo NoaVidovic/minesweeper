@@ -1,31 +1,75 @@
 {
-  "name": "minesweeper",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "react": "^16.9.0",
-    "react-dom": "^16.9.0",
-    "react-scripts": "3.1.2"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
+    "name": "minesweeper",
+    "version": "0.1.0",
+    "description": "Minesweeper app built with Electron and React",
+    "main": "src/electron-starter.js",
+    "homepage": "./",
+    "license": "CC0",
+    "scripts": {
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test --end=jsdom",
+        "eject": "react-scripts eject",
+        "electron": "electron .",
+        "dev": "nf start",
+        "make": "react-scripts build && electron-forge make && electron-forge make -p darwin && electron-forge make -p win32"
+    },
+    "eslintConfig": {
+        "extends": "react-app"
+    },
+    "author": "Noa Vidovic",
+    "devDependencies": {
+        "@electron-forge/maker-deb": "^6.0.0-beta.45",
+        "@electron-forge/maker-flatpak": "^6.0.0-beta.45",
+        "@electron-forge/maker-pkg": "^6.0.0-beta.45",
+        "@electron-forge/maker-rpm": "^6.0.0-beta.45",
+        "@electron-forge/maker-snap": "^6.0.0-beta.45",
+        "@electron-forge/maker-squirrel": "^6.0.0-beta.45",
+        "@electron-forge/maker-zip": "^6.0.0-beta.45",
+        "electron": "^6.0.10",
+        "foreman": "^3.0.1",
+        "react-scripts": "^3.1.2"
+    },
+    "dependencies": {
+        "react": "^16.9.0",
+        "react-dom": "^16.9.0"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "config": {
+        "forge": {
+            "makers": [
+                {
+                    "name": "@electron-forge/maker-zip",
+                    "platforms": ["linux", "win32", "darwin"]
+                },
+                {
+                    "name": "@electron-forge/maker-deb",
+                    "platforms": ["linux"]
+                },
+                {
+                    "name": "@electron-forge/maker-rpm",
+                    "platforms": ["linux"]
+                },
+                {
+                    "name": "@electron-forge/maker-squirrel",
+                    "platforms": ["win32"]
+                },
+                {
+                    "name": "@electron-forge/maker-pkg",
+                    "platforms": ["darwin"]
+                }
+            ]
+        }
+    }
 }
