@@ -16,9 +16,9 @@ class Minefield extends React.Component {
         super(props);
 
         //populates an array with mines
-        let mines = Array(props.difficulty[0]*props.difficulty[1]);
+        let mines = Array(props.row_number * props.column_number);
         for (let i = 0; i < mines.length; i++)
-            mines[i] = i < props.difficulty[2];
+            mines[i] = i < props.mine_number;
 
         //shuffles mines
         for (let i = mines.length - 1; i > 0; i--) {
@@ -26,12 +26,13 @@ class Minefield extends React.Component {
             [mines[i], mines[j]] = [mines[j], mines[i]];
         }
 
+        //turns the mine array into a grid
         let squares = [];
         let num = 0;
-        for (let i = 0; i < props.difficulty[0]; i++) {
+        for (let i = 0; i < props.row_number; i++) {
             squares.push([]);
 
-            for (let j = 0; j < props.difficulty[1]; j++)
+            for (let j = 0; j < props.column_number; j++)
                 squares[i].push(mines[num++]);
         }
 
@@ -63,7 +64,9 @@ class Minefield extends React.Component {
     }
 
     render = () => {
-        let size = Math.min(0.96*this.props.height / this.props.difficulty[0], 0.9*this.props.width / this.props.difficulty[1]);
+        let size = Math.min(
+            0.96*this.props.height / this.props.row_number,
+            0.9*this.props.width / this.props.column_number);
 
         const grid = [];
 
@@ -93,7 +96,9 @@ class Game extends React.Component {
         return (
             <div className="game">
                 <Minefield
-                    difficulty={this.props.difficulty}
+                    row_number={this.props.row_number}
+                    column_number={this.props.column_number}
+                    mine_number={this.props.mine_number}
                     width={this.props.width}
                     height={this.props.height} />
             </div>

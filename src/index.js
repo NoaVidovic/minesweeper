@@ -7,13 +7,13 @@ import Game from './game.js';
 function DifficultyScreen(props){
 	return (
 		<div className="difficulty-screen">
-			<button className="difficulty-button" onClick={() => props.onClick(8, 8, 10)}>
+			<button className="difficulty-button" onClick={() => props.onClick({ row_number: 8, column_number: 8, mine_number: 10 })}>
 				Easy
 			</button>
-			<button className="difficulty-button" onClick={() => props.onClick(16, 16, 40)}>
+			<button className="difficulty-button" onClick={() => props.onClick({ row_number: 16, column_number: 16, mine_number: 40 })}>
 				Intermediate
 			</button>
-			<button className="difficulty-button" onClick={() => props.onClick(16, 30, 99)}>
+			<button className="difficulty-button" onClick={() => props.onClick({ row_number: 16, column_number: 30, mine_number: 99 })}>
 				Advanced
 			</button>
 		</div>
@@ -25,14 +25,15 @@ class Home extends React.Component {
 		super(props);
 
 		this.state = {
-			difficulty: null
+			row_number: null,
+			column_number: null,
+			mine_number: null
 		};
 	}
 
-	handleClick = (rows, columns, mines) => {
-		this.setState({
-			difficulty: [rows, columns, mines]
-		});
+	handleClick = (difficulty) => {
+		let { row_number, column_number, mine_number } = difficulty;
+		this.setState({ row_number, column_number, mine_number });
 	};
 
 	updateDimensions = () =>
@@ -56,11 +57,13 @@ class Home extends React.Component {
 	render() {
 		return (
 			<div className="Home">
-				{!this.state.difficulty
+				{!(this.state.row_number && this.state.column_number && this.state.mine_number)
 					? <DifficultyScreen
 						onClick={this.handleClick} />
 					: <Game
-						difficulty={this.state.difficulty}
+						row_number={this.state.row_number}
+						column_number={this.state.column_number}
+						mine_number={this.state.mine_number}
 						width={this.state.width}
 						height={this.state.height} />
 				}
