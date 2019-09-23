@@ -1,72 +1,75 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import Game from './game.js';
 
-function Square(props) {
+
+
+function DifficultyScreen(props){
 	return (
-		<button className="square" onClick={props.onClick}>
-			{props.value}
-		</button>
-	)
+		<div className="difficulty-screen">
+			<button className="difficulty-button" onClick={() => props.onClick(8, 8, 10)}>
+				Easy
+			</button>
+			<button className="difficulty-button" onClick={() => props.onClick(16, 16, 40)}>
+				Intermediate
+			</button>
+			<button className="difficulty-button" onClick={() => props.onClick(16, 30, 99)}>
+				Advanced
+			</button>
+		</div>
+	);
 }
 
-class Minefield extends React.Component {
+class Home extends React.Component {
 	constructor(props) {
 		super(props);
 
-		let array = Array(9);
-		for (let i = 0; i < 9; i++)
-			array[i] = i;
-
 		this.state = {
-			squares: array
+			difficulty: null
 		};
 	}
 
-	renderSquare(i) {
-		return (
-			<Square
-				value={this.state.squares[i]}
-				onClick={() => alert(i)}
-			/>
-		)
+	handleClick = (rows, columns, mines) => {
+		this.setState({
+			difficulty: [rows, columns, mines]
+		});
+	};
+
+	updateDimensions = () =>
+		this.setState({
+			width: window.innerWidth,
+			height: window.innerHeight
+		});
+
+	componentWillMount() {
+		this.updateDimensions();
+	}
+
+	componentDidMount() {
+		window.addEventListener('resize', this.updateDimensions);
+	}
+
+	componentWillUnmount() {
+		window.removeEventListener('resize', this.updateDimensions);
 	}
 
 	render() {
 		return (
-			<div>
-				<div className="row">
-					{this.renderSquare(0)}
-					{this.renderSquare(1)}
-					{this.renderSquare(2)}
-				</div>
-				<div className="row">
-					{this.renderSquare(3)}
-					{this.renderSquare(4)}
-					{this.renderSquare(5)}
-				</div>
-				<div className="row">
-					{this.renderSquare(6)}
-					{this.renderSquare(7)}
-					{this.renderSquare(8)}
-				</div>
-			</div>
-		);
-	}
-}
-
-class Screen extends React.Component {
-	render() {
-		return (
-			<div className="game">
-				<div className="game-board">
-					<Minefield />
-				</div>
+			<div className="Home">
+				{!this.state.difficulty
+					? <DifficultyScreen
+						onClick={this.handleClick} />
+					: <Game
+						difficulty={this.state.difficulty}
+						width={this.state.width}
+						height={this.state.height} />
+				}
 			</div>
 		);
 	}
 }
 
 ReactDOM.render(
-	<Screen />,
+	<Home />,
 	document.getElementById('root')
 );
