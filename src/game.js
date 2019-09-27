@@ -1,13 +1,26 @@
 import React from 'react';
+import Button from '@material-ui/core/Button'
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import { grey } from '@material-ui/core/colors'
+
+const yellowTheme = createMuiTheme({ palette: { primary: grey } });
 
 function Square(props) {
     return (
-        <button
+        <Button
             className="Square"
+            variant="contained"
+            color="primary"
             style={{height: props.size, width: props.size}}
-            onClick={props.onClick}>
+            onClick={props.onClick}
+            onContextMenu={props.onContextMenu}
+            disabled={props.disabled}
+            disableRipple={true}
+            disableFocusRipple={true}
+            disableTouchRipple={true}
+        >
             {props.state}
-        </button>
+        </Button>
     )
 }
 
@@ -18,10 +31,7 @@ class Minefield extends React.Component {
         //populates an array with mines
         let mine_list = Array(props.row_number * props.column_number);
         for (let i = 0; i < mine_list.length; i++)
-            mine_list[i] =
-                i < props.mine_number
-                    ? 'mine'
-                    : 'idle';
+            mine_list[i] = i < props.mine_number;
 
         //shuffles mines
         for (let i = mine_list.length - 1; i > 0; i--) {
@@ -39,8 +49,11 @@ class Minefield extends React.Component {
                 mines[i].push(mine_list[num++]);
         }
 
+        let state = [...Array(props.row_number)].map(() => Array(props.column_number).fill(null));
+
         this.state = {
-            mines: mines
+            mines: mines,
+            state: state
         };
     }
 
@@ -54,7 +67,7 @@ class Minefield extends React.Component {
                 if (b < 0 && b >= this.props.column_number)
                     continue;
 
-                if (this.state.mines[a][b] === 'mine')
+                if (this.state.mines[a][b])
                     num++;
             }
         }
@@ -70,47 +83,56 @@ class Minefield extends React.Component {
                 if (b < 0 || b >= this.props.column_number)
                     continue;
 
-                if (this.state.mines[a][b] === 'idle')
-                        this.updateSquare(a, b);
+                if (this.state.state[a][b] == null)
+                    this.updateSquare(a, b);
             }
         }
     }
 
     updateSquare(i, j) {
-        //TODO: change css for clicked square state
+        let state = this.state.state;
 
-        let mines = this.state.mines;
         const mine_num = this.findMineNum(i, j);
 
         if (mine_num === 0) {
-            mines[i][j] = '.';
+            state[i][j] = '';
             this.clearAroundZero(i, j);
         } else {
-            mines[i][j] = mine_num;
+            state[i][j] = mine_num;
         }
 
-        this.setState({mines});
+        this.setState({state});
+    }
+
+    setFlag(i, j) {
+        let state = this.state.state;
+        if (state[i][j] === '!')
+            state[i][j] = null;
+        else
+            state[i][j] = '!';
+
+        this.setState({state});
     }
 
     handleClick = (i, j) => {
-        if (this.state.mines[i][j] === 'mine')
-            alert('You lost!');
-        else
-            this.updateSquare(i, j);
+        if (this.state.state[i][j] !== '!')
+            if (this.state.mines[i][j])
+                alert('You lost!');
+            else
+                this.updateSquare(i, j);
     };
 
     renderSquare(i, j, size) {
-        const square = this.state.mines[i][j];
+        const state = this.state.state[i][j];
 
         return (
             <Square
                 key={i + ': ' + j}
-                state={
-                    ['mine', 'idle'].includes(square)
-                        ? null : square
-                }
+                state={state}
                 onClick={() => this.handleClick(i, j)}
+                onContextMenu={() => this.setFlag(i, j)}
                 size={size}
+                disabled={![null, '!'].includes(state)}
             />
         )
     }
@@ -122,10 +144,10 @@ class Minefield extends React.Component {
 
         const grid = [];
 
-        for (let i = 0; i < this.state.mines.length; i++) {
+        for (let i = 0; i < this.props.row_number; i++) {
             const grid_row = [];
 
-            for (let j = 0; j < this.state.mines[i].length; j++)
+            for (let j = 0; j < this.props.column_number; j++)
                 grid_row.push(this.renderSquare(i, j, size));
 
             grid.push(
@@ -137,7 +159,9 @@ class Minefield extends React.Component {
 
         return (
             <div>
-                {grid}
+                <MuiThemeProvider theme={yellowTheme}>
+                    {grid}
+                </MuiThemeProvider>
             </div>
         );
     }
