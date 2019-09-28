@@ -1,26 +1,67 @@
 import React from 'react';
-import Button from '@material-ui/core/Button'
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
-import { grey } from '@material-ui/core/colors'
+import './button.css';
 
-const yellowTheme = createMuiTheme({ palette: { primary: grey } });
+import blank from './img/blank.svg';
+import flag from './img/flag.svg';
+import icon1 from './img/1mines.svg';
+import icon2 from './img/2mines.svg';
+import icon3 from './img/3mines.svg';
+import icon4 from './img/4mines.svg';
+import icon5 from './img/5mines.svg';
+import icon6 from './img/6mines.svg';
+import icon7 from './img/7mines.svg';
+import icon8 from './img/8mines.svg';
+
+function getImage(state) {
+    switch (state) {
+        case 1:
+            return icon1;
+        case 2:
+            return icon2;
+        case 3:
+            return icon3;
+        case 4:
+            return icon4;
+        case 5:
+            return icon5;
+        case 6:
+            return icon6;
+        case 7:
+            return icon7;
+        case 8:
+            return icon8;
+        case '!':
+            return flag;
+        default:
+            return blank;
+    }
+}
 
 function Square(props) {
+    let squareStyle = {
+        height: props.size,
+        width: props.size
+    };
+
     return (
-        <Button
-            className="Square"
-            variant="contained"
-            color="primary"
-            style={{height: props.size, width: props.size}}
-            onClick={props.onClick}
-            onContextMenu={props.onContextMenu}
+        <button
+            className="active-square"
+            style={squareStyle}
             disabled={props.disabled}
-            disableRipple={true}
-            disableFocusRipple={true}
-            disableTouchRipple={true}
+            onMouseDown={
+                e => e.button === 0
+                    ? props.onLeftClick()
+                    : props.onRightClick()
+            }
+            onDragStart={e => e.preventDefault()}
         >
-            {props.state}
-        </Button>
+            <img
+                src={getImage(props.state)}
+                alt=''
+                width='80%'
+                height='80%'
+            />
+        </button>
     )
 }
 
@@ -53,7 +94,8 @@ class Minefield extends React.Component {
 
         this.state = {
             mines: mines,
-            state: state
+            state: state,
+            opened: 0
         };
     }
 
@@ -90,16 +132,16 @@ class Minefield extends React.Component {
     }
 
     updateSquare(i, j) {
-        let state = this.state.state;
+        //TODO: FIND A BETTER WAY TO DO THIS!
+        this.state.opened += 1;
 
+        let state = this.state.state;
         const mine_num = this.findMineNum(i, j);
 
-        if (mine_num === 0) {
-            state[i][j] = '';
+        state[i][j] = mine_num;
+
+        if (mine_num === 0)
             this.clearAroundZero(i, j);
-        } else {
-            state[i][j] = mine_num;
-        }
 
         this.setState({state});
     }
@@ -129,8 +171,8 @@ class Minefield extends React.Component {
             <Square
                 key={i + ': ' + j}
                 state={state}
-                onClick={() => this.handleClick(i, j)}
-                onContextMenu={() => this.setFlag(i, j)}
+                onLeftClick={() => this.handleClick(i, j)}
+                onRightClick={() => this.setFlag(i, j)}
                 size={size}
                 disabled={![null, '!'].includes(state)}
             />
@@ -157,11 +199,13 @@ class Minefield extends React.Component {
             );
         }
 
+        let won = this.state.opened === this.props.row_number*this.props.column_number - this.props.mine_number;
+        if (won)
+            alert('You won!');
+
         return (
             <div>
-                <MuiThemeProvider theme={yellowTheme}>
-                    {grid}
-                </MuiThemeProvider>
+                {grid}
             </div>
         );
     }

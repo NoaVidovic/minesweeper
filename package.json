@@ -12,7 +12,7 @@
         "eject": "react-scripts eject",
         "electron": "electron .",
         "dev": "nf start",
-        "make": "react-scripts build && electron-forge make && electron-forge make -p darwin && electron-forge make -p win32"
+        "make": "react-scripts build && electron-forge make && electron-forge make -p win32 && electron-forge make -p darwin"
     },
     "eslintConfig": {
         "extends": "react-app"

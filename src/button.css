@@ -1,0 +1,18 @@
+.active-square {
+    background-color: #babdb6;
+    padding: 0 0 0 0;
+    font-size: 20px;
+    border-radius: 4px;
+}
+
+.active-square:hover {
+    background-color: #d3d7cf;
+}
+
+.active-square:disabled {
+    background-color: #dededc;
+}
+
+.active-square:disabled:hover {
+    background-color: #dededc;
+}

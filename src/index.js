@@ -72,6 +72,8 @@ class Home extends React.Component {
 	}
 }
 
+document.body.style = 'background: #31363c;';
+
 ReactDOM.render(
 	<Home />,
 	document.getElementById('root')
