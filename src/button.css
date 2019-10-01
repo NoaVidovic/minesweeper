@@ -1,18 +1,23 @@
-.active-square {
+button.unopened-square {
     background-color: #babdb6;
     padding: 0 0 0 0;
-    font-size: 20px;
     border-radius: 4px;
+    outline: 0;
+    border: 1px solid #31363c;
 }
 
-.active-square:hover {
+button.unopened-square:hover {
     background-color: #d3d7cf;
 }
 
-.active-square:disabled {
+button.number-square {
     background-color: #dededc;
+    padding: 0 0 0 0;
+    border-radius: 4px;
+    outline: 0;
+    border: 1px solid #31363c;
 }
 
-.active-square:disabled:hover {
+button.number-square:hover {
     background-color: #dededc;
 }

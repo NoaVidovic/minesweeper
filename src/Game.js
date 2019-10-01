@@ -43,26 +43,47 @@ function Square(props) {
         width: props.size
     };
 
-    return (
-        <button
-            className="active-square"
-            style={squareStyle}
-            disabled={props.disabled}
-            onMouseDown={
-                e => e.button === 0
-                    ? props.onLeftClick()
-                    : props.onRightClick()
-            }
-            onDragStart={e => e.preventDefault()}
-        >
-            <img
-                src={getImage(props.state)}
-                alt=''
-                width='80%'
-                height='80%'
-            />
-        </button>
-    )
+    if (props.state === null || props.state === '!') {
+        return (
+            <button
+                className="unopened-square"
+                style={squareStyle}
+                onMouseDown={
+                    e => e.button === 0
+                        ? props.onLeftClick()
+                        : props.onRightClick()
+                }
+                onDragStart={e => e.preventDefault()}
+                onClick={e => e.preventDefault()}
+                onContextMenu={e => e.preventDefault()}
+            >
+                <img
+                    src={getImage(props.state)}
+                    alt=''
+                    width='80%'
+                    height='80%'
+                />
+            </button>
+        );
+    } else {
+        return (
+            <button
+                className="number-square"
+                style={squareStyle}
+                onMouseDown={props.onNumberClick}
+                onDragStart={e => e.preventDefault()}
+                onClick={e => e.preventDefault()}
+                onContextMenu={e => e.preventDefault()}
+            >
+                <img
+                    src={getImage(props.state)}
+                    alt=''
+                    width='80%'
+                    height='80%'
+                />
+            </button>
+        );
+    }
 }
 
 class Minefield extends React.Component {
@@ -92,10 +113,23 @@ class Minefield extends React.Component {
 
         let state = [...Array(props.row_number)].map(() => Array(props.column_number).fill(null));
 
+        console.log(`row number: ${props.row_number}`);
+        console.log(`column number: ${props.column_number}`);
+
+        const row_to_str = row => {
+            let str = '';
+
+            for (let mine of row)
+                str += mine ? ':' : '-';
+
+            return str;
+        };
+
+        console.table(mines.map(r => row_to_str(r)));
+
         this.state = {
             mines: mines,
             state: state,
-            opened: 0
         };
     }
 
@@ -113,6 +147,7 @@ class Minefield extends React.Component {
                     num++;
             }
         }
+
         return num;
     }
 
@@ -126,14 +161,13 @@ class Minefield extends React.Component {
                     continue;
 
                 if (this.state.state[a][b] == null)
-                    this.updateSquare(a, b);
+                    this.openSquare(a, b);
             }
         }
     }
 
-    updateSquare(i, j) {
-        //TODO: FIND A BETTER WAY TO DO THIS!
-        this.state.opened += 1;
+    openSquare(i, j) {
+        this.props.open();
 
         let state = this.state.state;
         const mine_num = this.findMineNum(i, j);
@@ -146,12 +180,47 @@ class Minefield extends React.Component {
         this.setState({state});
     }
 
+    clearAroundNumber(i, j) {
+        let flags = 0;
+
+        for (let a = i-1; a <= i+1; a++) {
+            if (a < 0 || a >= this.props.row_number)
+                continue;
+
+            for (let b = j-1; b <= j+1; b++) {
+                if (b < 0 || b >= this.props.column_number)
+                    continue;
+
+                if (this.state.state[a][b] === '!')
+                    flags++;
+            }
+        }
+
+        if (flags === this.state.state[i][j]) {
+            for (let a = i-1; a <= i+1; a++) {
+                if (a < 0 || a >= this.props.row_number)
+                    continue;
+
+                for (let b = j-1; b <= j+1; b++) {
+                    if (b < 0 || b >= this.props.column_number)
+                        continue;
+
+                    if (this.state.state[a][b] == null)
+                        this.openSquare(a, b)
+                }
+            }
+        }
+    }
+
     setFlag(i, j) {
         let state = this.state.state;
-        if (state[i][j] === '!')
+        if (state[i][j] === '!') {
+            this.props.increaseFlags(-1);
             state[i][j] = null;
-        else
+        } else {
+            this.props.increaseFlags(1);
             state[i][j] = '!';
+        }
 
         this.setState({state});
     }
@@ -161,7 +230,7 @@ class Minefield extends React.Component {
             if (this.state.mines[i][j])
                 alert('You lost!');
             else
-                this.updateSquare(i, j);
+                this.openSquare(i, j);
     };
 
     renderSquare(i, j, size) {
@@ -173,8 +242,8 @@ class Minefield extends React.Component {
                 state={state}
                 onLeftClick={() => this.handleClick(i, j)}
                 onRightClick={() => this.setFlag(i, j)}
+                onNumberClick={() => this.clearAroundNumber(i, j)}
                 size={size}
-                disabled={![null, '!'].includes(state)}
             />
         )
     }
@@ -199,10 +268,6 @@ class Minefield extends React.Component {
             );
         }
 
-        let won = this.state.opened === this.props.row_number*this.props.column_number - this.props.mine_number;
-        if (won)
-            alert('You won!');
-
         return (
             <div>
                 {grid}
@@ -212,18 +277,49 @@ class Minefield extends React.Component {
 }
 
 class Game extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            flags: 0,
+            opened: 0,
+        }
+    }
+
+    increaseFlags = i => {
+        let flags = this.state.flags + i;
+
+        this.setState({flags});
+    };
+
+    open = () => {
+        this.setState(prevState => {
+            return {
+                opened: prevState.opened + 1
+            };
+        });
+    };
+
     render() {
+        if (this.state.opened === this.props.row_number*this.props.column_number - this.props.mine_number)
+            alert('You won!');
+
         return (
-            <div className="game">
+            <div className="minefield">
                 <Minefield
                     row_number={this.props.row_number}
                     column_number={this.props.column_number}
                     mine_number={this.props.mine_number}
                     width={this.props.width}
-                    height={this.props.height} />
+                    height={this.props.height}
+                    increaseFlags={this.increaseFlags}
+                    open={this.open} />
+                <text style={{padding: '10', color: '#ffffff', fontSize: 30}}>
+                    {this.state.flags}/{this.props.mine_number}
+                </text>
             </div>
         );
     }
 }
 
-export default Game
+export default Game;
