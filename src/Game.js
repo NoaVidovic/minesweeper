@@ -3,6 +3,9 @@ import './button.css';
 
 import blank from './img/blank.svg';
 import flag from './img/flag.svg';
+import mine from './img/mine.svg';
+import exploded from './img/exploded.svg';
+import incorrect from './img/incorrect.svg';
 import icon1 from './img/1mines.svg';
 import icon2 from './img/2mines.svg';
 import icon3 from './img/3mines.svg';
@@ -32,6 +35,12 @@ function getImage(state) {
             return icon8;
         case '!':
             return flag;
+        case 'mine':
+            return mine;
+        case 'exploded':
+            return exploded;
+        case 'incorrect':
+            return incorrect;
         default:
             return blank;
     }
@@ -43,25 +52,28 @@ function Square(props) {
         width: props.size
     };
 
-    if (props.state === null || props.state === '!') {
+    if ([null, '!', 'mine', 'incorrect'].includes(props.state)) {
         return (
             <button
                 className="unopened-square"
                 style={squareStyle}
                 onMouseDown={
-                    e => e.button === 0
-                        ? props.onLeftClick()
-                        : props.onRightClick()
+                    e => props.gameOver
+                        ? null
+                        : e.button === 0
+                            ? props.onLeftClick()
+                            : props.onRightClick()
                 }
                 onDragStart={e => e.preventDefault()}
                 onClick={e => e.preventDefault()}
                 onContextMenu={e => e.preventDefault()}
+                disabled={props.gameOver}
             >
                 <img
                     src={getImage(props.state)}
                     alt=''
-                    width='80%'
-                    height='80%'
+                    width='70%'
+                    height='70%'
                 />
             </button>
         );
@@ -70,7 +82,11 @@ function Square(props) {
             <button
                 className="number-square"
                 style={squareStyle}
-                onMouseDown={props.onNumberClick}
+                onMouseDown={
+                    props.gameOver
+                        ? null
+                        : props.onNumberClick
+                }
                 onDragStart={e => e.preventDefault()}
                 onClick={e => e.preventDefault()}
                 onContextMenu={e => e.preventDefault()}
@@ -78,8 +94,8 @@ function Square(props) {
                 <img
                     src={getImage(props.state)}
                     alt=''
-                    width='80%'
-                    height='80%'
+                    width='70%'
+                    height='70%'
                 />
             </button>
         );
@@ -90,10 +106,15 @@ class Minefield extends React.Component {
     constructor(props) {
         super(props);
 
+        let state = [...Array(this.props.row_number)].map(() => Array(this.props.column_number).fill(null));
+        this.state = {state};
+    }
+
+    spawnMines(a, b) {
         //populates an array with mines
-        let mine_list = Array(props.row_number * props.column_number);
+        let mine_list = Array(this.props.row_number * this.props.column_number - 9);
         for (let i = 0; i < mine_list.length; i++)
-            mine_list[i] = i < props.mine_number;
+            mine_list[i] = i < this.props.mine_number;
 
         //shuffles mines
         for (let i = mine_list.length - 1; i > 0; i--) {
@@ -104,17 +125,16 @@ class Minefield extends React.Component {
         //turns the mine array into a grid
         let mines = [];
         let num = 0;
-        for (let i = 0; i < props.row_number; i++) {
+        for (let i = 0; i < this.props.row_number; i++) {
             mines.push([]);
 
-            for (let j = 0; j < props.column_number; j++)
-                mines[i].push(mine_list[num++]);
+            for (let j = 0; j < this.props.column_number; j++) {
+                if (a-1 <= i && i <= a+1 && b-1 <= j && j <= b+1)
+                    mines[i].push(false);
+                else
+                    mines[i].push(mine_list[num++]);
+            }
         }
-
-        let state = [...Array(props.row_number)].map(() => Array(props.column_number).fill(null));
-
-        console.log(`row number: ${props.row_number}`);
-        console.log(`column number: ${props.column_number}`);
 
         const row_to_str = row => {
             let str = '';
@@ -127,10 +147,27 @@ class Minefield extends React.Component {
 
         console.table(mines.map(r => row_to_str(r)));
 
-        this.state = {
+        this.setState({
             mines: mines,
-            state: state,
-        };
+        },
+            () => this.openSquare(a, b));
+    }
+
+    handleLoss(a, b) {
+        let state = this.state.state;
+
+        for (let i = 0; i < this.props.row_number; i++)
+            for (let j = 0; j < this.props.column_number; j++) {
+                if (this.state.mines[i][j] && this.state.state[i][j] !== '!')
+                    state[i][j] = 'mine';
+
+                if (!this.state.mines[i][j] && this.state.state[i][j] === '!')
+                    state[i][j] = 'incorrect';
+            }
+
+        state[a][b] = 'exploded';
+
+        this.setState({state: state, disabled: true});
     }
 
     findMineNum(i, j) {
@@ -206,7 +243,7 @@ class Minefield extends React.Component {
                         continue;
 
                     if (this.state.state[a][b] == null)
-                        this.openSquare(a, b)
+                        this.handleClick(a, b)
                 }
             }
         }
@@ -226,11 +263,18 @@ class Minefield extends React.Component {
     }
 
     handleClick = (i, j) => {
-        if (this.state.state[i][j] !== '!')
-            if (this.state.mines[i][j])
-                alert('You lost!');
-            else
-                this.openSquare(i, j);
+        const allNull = arr => arr.every(l => l.every(el => el == null));
+
+        if (allNull(this.state.state)) {
+            console.log("All null; spawning board");
+            this.spawnMines(i, j);
+        } else {
+            if (this.state.state[i][j] !== '!')
+                if (this.state.mines[i][j])
+                    this.handleLoss(i, j);
+                else
+                    this.openSquare(i, j);
+        }
     };
 
     renderSquare(i, j, size) {
@@ -244,22 +288,19 @@ class Minefield extends React.Component {
                 onRightClick={() => this.setFlag(i, j)}
                 onNumberClick={() => this.clearAroundNumber(i, j)}
                 size={size}
+                gameOver={this.state.disabled}
             />
         )
     }
 
     render = () => {
-        let size = Math.min(
-            0.96*this.props.height / this.props.row_number,
-            0.9*this.props.width / this.props.column_number);
-
         const grid = [];
 
         for (let i = 0; i < this.props.row_number; i++) {
             const grid_row = [];
 
             for (let j = 0; j < this.props.column_number; j++)
-                grid_row.push(this.renderSquare(i, j, size));
+                grid_row.push(this.renderSquare(i, j, this.props.size));
 
             grid.push(
                 <div key={i} className="row">
@@ -304,19 +345,27 @@ class Game extends React.Component {
         if (this.state.opened === this.props.row_number*this.props.column_number - this.props.mine_number)
             alert('You won!');
 
+        const size = Math.min(
+            0.96*this.props.height / this.props.row_number,
+            0.9*this.props.width / this.props.column_number);
+        const sidebarWidth = 0.08 * this.props.width;
+
         return (
-            <div className="minefield">
-                <Minefield
-                    row_number={this.props.row_number}
-                    column_number={this.props.column_number}
-                    mine_number={this.props.mine_number}
-                    width={this.props.width}
-                    height={this.props.height}
-                    increaseFlags={this.increaseFlags}
-                    open={this.open} />
-                <text style={{padding: '10', color: '#ffffff', fontSize: 30}}>
-                    {this.state.flags}/{this.props.mine_number}
-                </text>
+            <div className="game">
+                <div className="minefield">
+                    <Minefield
+                        row_number={this.props.row_number}
+                        column_number={this.props.column_number}
+                        mine_number={this.props.mine_number}
+                        size={size}
+                        increaseFlags={this.increaseFlags}
+                        open={this.open} />
+                </div>
+                <div className="sidebar" style={{width: sidebarWidth}}>
+                    <text style={{color: '#ffffff', fontSize: 30}}>
+                        {this.state.flags}/{this.props.mine_number}
+                    </text>
+                </div>
             </div>
         );
     }

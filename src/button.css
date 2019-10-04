@@ -1,23 +1,36 @@
-button.unopened-square {
+.unopened-square {
     background-color: #babdb6;
-    padding: 0 0 0 0;
+    padding: 0;
     border-radius: 4px;
     outline: 0;
-    border: 1px solid #31363c;
+    border: 2px solid #31363c;
 }
-
-button.unopened-square:hover {
+.unopened-square:hover {
     background-color: #d3d7cf;
 }
 
-button.number-square {
-    background-color: #dededc;
-    padding: 0 0 0 0;
-    border-radius: 4px;
-    outline: 0;
-    border: 1px solid #31363c;
+.unopened-square:disabled:hover {
+    background-color: #babdb6;
 }
 
-button.number-square:hover {
+.number-square {
     background-color: #dededc;
+    padding: 0;
+    border-radius: 4px;
+    outline: 0;
+    border: 2px solid #31363c;
+}
+.number-square:hover {
+    background-color: #dededc;
+}
+
+.minefield {
+    display: inline-block;
+}
+
+.sidebar {
+    display: inline-block;
+    height: 100%;
+    vertical-align: top;
+    text-align: center;
 }
