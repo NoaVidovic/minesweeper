@@ -107,7 +107,10 @@ class Minefield extends React.Component {
         super(props);
 
         let state = [...Array(this.props.row_number)].map(() => Array(this.props.column_number).fill(null));
-        this.state = {state};
+        this.state = {
+            state: state,
+            opened: 0,
+        };
     }
 
     spawnMines(a, b) {
@@ -151,6 +154,11 @@ class Minefield extends React.Component {
             mines: mines,
         },
             () => this.openSquare(a, b));
+    }
+
+    handleWin() {
+        alert(`You won in ${document.getElementById('time').innerHTML}`);
+        this.setState({disabled: true});
     }
 
     handleLoss(a, b) {
@@ -204,8 +212,6 @@ class Minefield extends React.Component {
     }
 
     openSquare(i, j) {
-        this.props.open();
-
         let state = this.state.state;
         const mine_num = this.findMineNum(i, j);
 
@@ -214,7 +220,14 @@ class Minefield extends React.Component {
         if (mine_num === 0)
             this.clearAroundZero(i, j);
 
-        this.setState({state});
+        this.setState(prevState => {
+            return {
+                state: state,
+                opened: prevState.opened + 1
+            };
+        });
+
+        console.log(this.state.opened);
     }
 
     clearAroundNumber(i, j) {
@@ -262,12 +275,28 @@ class Minefield extends React.Component {
         this.setState({state});
     }
 
+    refreshTime = (start) => {
+        if (!this.state.disabled) {
+            const checkTime = i => i<10 ? '0'+i : i;
+            let secs = (new Date() - start)/1000 | 0;
+
+            let mins = checkTime(secs/60 | 0);
+            secs = checkTime(secs - mins*60);
+
+            document.getElementById("time").innerHTML = `${mins}:${secs}`;
+
+            setTimeout(() => this.refreshTime(start), 500);
+        }
+    };
+
     handleClick = (i, j) => {
         const allNull = arr => arr.every(l => l.every(el => el == null));
 
         if (allNull(this.state.state)) {
             console.log("All null; spawning board");
             this.spawnMines(i, j);
+
+            this.refreshTime(new Date());
         } else {
             if (this.state.state[i][j] !== '!')
                 if (this.state.mines[i][j])
@@ -294,6 +323,10 @@ class Minefield extends React.Component {
     }
 
     render = () => {
+        if (this.state.opened === this.props.row_number*this.props.column_number - this.props.mine_number
+            && !this.state.disabled)
+            this.handleWin();
+
         const grid = [];
 
         for (let i = 0; i < this.props.row_number; i++) {
@@ -323,7 +356,6 @@ class Game extends React.Component {
 
         this.state = {
             flags: 0,
-            opened: 0,
         }
     }
 
@@ -333,18 +365,7 @@ class Game extends React.Component {
         this.setState({flags});
     };
 
-    open = () => {
-        this.setState(prevState => {
-            return {
-                opened: prevState.opened + 1
-            };
-        });
-    };
-
     render() {
-        if (this.state.opened === this.props.row_number*this.props.column_number - this.props.mine_number)
-            alert('You won!');
-
         const size = Math.min(
             0.96*this.props.height / this.props.row_number,
             0.9*this.props.width / this.props.column_number);
@@ -358,13 +379,15 @@ class Game extends React.Component {
                         column_number={this.props.column_number}
                         mine_number={this.props.mine_number}
                         size={size}
-                        increaseFlags={this.increaseFlags}
-                        open={this.open} />
+                        increaseFlags={this.increaseFlags} />
                 </div>
                 <div className="sidebar" style={{width: sidebarWidth}}>
-                    <text style={{color: '#ffffff', fontSize: 30}}>
+                    <div style={{color: '#ffffff', fontSize: 30}}>
                         {this.state.flags}/{this.props.mine_number}
-                    </text>
+                    </div>
+                    <div id="time" style={{color: '#ffffff', fontSize: 30}}>
+                        00:00
+                    </div>
                 </div>
             </div>
         );

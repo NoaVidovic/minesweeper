@@ -11,6 +11,9 @@ const DifficultyScreen = props => (
         <button className="difficulty-button" onClick={() => props.onClick({ row_number: 16, column_number: 30, mine_number: 99 })}>
             Advanced
         </button>
+        <button className="difficulty-button" onClick={() => props.onClick({ row_number: 80, column_number: 100, mine_number: 800 })}>
+            Hardcore!
+        </button>
     </div>
 );
 
