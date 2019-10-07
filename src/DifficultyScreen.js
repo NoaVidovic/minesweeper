@@ -1,5 +1,10 @@
 import React from 'react';
 
+import './DifficultyScreen.css';
+
+
+//TODO: prettify the screen using CSS
+//TODO: center buttons on screen
 const DifficultyScreen = props => (
     <div className="difficulty-screen">
         <button className="difficulty-button" onClick={() => props.onClick({ row_number: 8, column_number: 8, mine_number: 10 })}>

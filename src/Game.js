@@ -1,5 +1,5 @@
 import React from 'react';
-import './button.css';
+import './Game.css';
 
 import blank from './img/blank.svg';
 import flag from './img/flag.svg';
@@ -14,6 +14,10 @@ import icon5 from './img/5mines.svg';
 import icon6 from './img/6mines.svg';
 import icon7 from './img/7mines.svg';
 import icon8 from './img/8mines.svg';
+
+const Store = window.require('electron-store');
+const store = new Store();
+
 
 function getImage(state) {
     switch (state) {
@@ -44,6 +48,35 @@ function getImage(state) {
         default:
             return blank;
     }
+}
+
+function writeHighscore(time, {row_number, column_number, mine_number}) {
+    const difficulty = `${row_number} ${column_number} ${mine_number}`;
+    const highscores = store.get(difficulty);
+
+    console.log(time);
+
+    if (!highscores) {
+        alert('Congrats! Top 10 score!');
+
+        const highs = [time];
+        store.set(difficulty, highs);
+
+        console.log(highs);
+    } else if (highscores.some(hs => hs > time) || highscores.length < 10) {
+        alert('Congrats! Top 10 score!');
+
+        highscores.push(time);
+        highscores.sort((a, b) => a-b);
+
+        if (highscores.length > 10)
+            highscores.pop();
+
+        store.set(difficulty, highscores);
+        console.log(highscores);
+    } else console.log('not a top 10;');
+
+    //TODO: add pop-up that shows highscores and highlights current score
 }
 
 function Square(props) {
@@ -139,25 +172,14 @@ class Minefield extends React.Component {
             }
         }
 
-        const row_to_str = row => {
-            let str = '';
-
-            for (let mine of row)
-                str += mine ? ':' : '-';
-
-            return str;
-        };
-
-        console.table(mines.map(r => row_to_str(r)));
-
         this.setState({
             mines: mines,
-        },
-            () => this.openSquare(a, b));
+        }, () => this.openSquare(a, b));
     }
 
     handleWin() {
-        alert(`You won in ${document.getElementById('time').innerHTML}`);
+        writeHighscore(new Date() - this.state.time, this.props);
+
         this.setState({disabled: true});
     }
 
@@ -226,8 +248,6 @@ class Minefield extends React.Component {
                 opened: prevState.opened + 1
             };
         });
-
-        console.log(this.state.opened);
     }
 
     clearAroundNumber(i, j) {
@@ -278,7 +298,7 @@ class Minefield extends React.Component {
     refreshTime = (start) => {
         if (!this.state.disabled) {
             const checkTime = i => i<10 ? '0'+i : i;
-            let secs = (new Date() - start)/1000 | 0;
+            let secs = (new Date() - start)/1000 | 0; // bitwise or with 0 truncates the decimal part
 
             let mins = checkTime(secs/60 | 0);
             secs = checkTime(secs - mins*60);
@@ -296,7 +316,9 @@ class Minefield extends React.Component {
             console.log("All null; spawning board");
             this.spawnMines(i, j);
 
-            this.refreshTime(new Date());
+            const time = new Date();
+            this.setState({time});
+            this.refreshTime(time);
         } else {
             if (this.state.state[i][j] !== '!')
                 if (this.state.mines[i][j])
